@@ -1,0 +1,5 @@
+{
+  "name": "Smart Student Expense Assistant",
+  "description": "A high-performance budgeting tool for university students featuring AI-powered spending insights, visual analytics, and simple local data persistence.",
+  "requestFramePermissions": []
+}
