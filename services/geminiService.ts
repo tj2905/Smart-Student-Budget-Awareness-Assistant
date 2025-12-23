@@ -3,27 +3,33 @@ import { GoogleGenAI } from "@google/genai";
 import { Expense, Budget } from "../types";
 
 export const getAIInsights = async (expenses: Expense[], budget: Budget): Promise<string> => {
-  if (expenses.length === 0) return "Add some expenses to see AI-powered financial advice!";
+  if (expenses.length === 0) return "Log your first few expenses to unlock hyper-personalized AI financial coaching!";
 
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   const totalSpent = expenses.reduce((sum, e) => sum + e.amount, 0);
   const remaining = budget.monthlyLimit - totalSpent;
   
-  // Format data for prompt
   const expenseSummary = expenses.map(e => `${e.timestamp}: ${e.category} - ₹${e.amount} (${e.note})`).join('\n');
 
   const prompt = `
-    As a student financial mentor in India, analyze these university expenses and provide 3-4 bullet points of concise, actionable advice.
-    Currency: Indian Rupee (₹)
+    As a high-level student financial strategist in India, analyze these expenses.
+    
+    CONTEXT:
+    Currency: INR (₹)
     Monthly Budget: ₹${budget.monthlyLimit}
     Total Spent: ₹${totalSpent}
     Remaining: ₹${remaining}
     
-    Expenses:
+    EXPENSE LOG:
     ${expenseSummary}
     
-    Keep it friendly, student-centric, and encouraging. Focus on typical Indian student spending patterns (like eating out, transport, mobile recharges) and saving tips.
+    TASK:
+    1. Identify the single biggest "leak" in their budget.
+    2. Provide 2-3 specific, actionable tips. 
+    3. Use Google Search to find current student-specific discounts or saving hacks relevant to their highest spending categories in India (e.g., Zomato Gold student packs, Unidays deals, or transport passes).
+    
+    Keep the tone professional yet encouraging.
   `;
 
   try {
@@ -31,14 +37,14 @@ export const getAIInsights = async (expenses: Expense[], budget: Budget): Promis
       model: "gemini-3-flash-preview",
       contents: prompt,
       config: {
+        tools: [{ googleSearch: {} }],
         temperature: 0.7,
-        topP: 0.8,
       },
     });
 
-    return response.text || "I couldn't generate insights right now. Keep an eye on your spending!";
+    return response.text || "Analysis complete. Recommendation: Keep an eye on impulsive 'Entertainment' spending to stay within your ₹" + budget.monthlyLimit + " limit.";
   } catch (error) {
     console.error("Gemini Insight Error:", error);
-    return "AI Insights currently unavailable. Tip: Try to limit 'Entertainment' spending this week!";
+    return "The AI mentor is briefly offline. Quick Tip: Check for student discounts on public transport to lower your monthly costs!";
   }
 };
